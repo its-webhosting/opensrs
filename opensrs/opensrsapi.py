@@ -163,7 +163,9 @@ class OpenSRS(object):
     def _lookup_domain(self, domain):
         return self._req(action='LOOKUP', object='DOMAIN',
                          attributes={'domain': domain})
-
+    def _get_price(self, domain):
+        return self._req(action='GET_PRICE', object='DOMAIN',
+                         attributes={'domain': domain})
     def _check_transfer(self, domain):
         return self._req(action='CHECK_TRANSFER', object='DOMAIN',
                          attributes={'domain': domain})
@@ -456,7 +458,14 @@ class OpenSRS(object):
                     self.CODE_DOMAIN_TAKEN_AWAITING_REGISTRATION]:
             return False
         raise errors.OperationFailure(rsp)
-
+    def get_price(self, domain):
+        try:
+            rsp = self._get_price(domain)
+        except errors.XCPError as e:
+            if e.response_code == self.CODE_DOMAIN_INVALID:
+                raise errors.InvalidDomain(e)
+            raise
+        return rsp.get_data()['attributes']['price']
     def domain_transferable(self, domain):
         try:
             rsp = self._check_transfer(domain)
